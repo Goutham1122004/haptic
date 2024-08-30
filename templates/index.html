@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morse Code Translator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #000035;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            font-size: 1rem;
+            border-radius: 10px;
+            border: 2px solid #dfe6e9;
+            margin-bottom: 20px;
+            resize: none;
+            background-color: #f7f9fb;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        select,
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            background-color: #0984e3;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        select {
+            background-color: #74b9ff;
+        }
+
+        button:hover {
+            background-color: #74b9ff;
+        }
+
+        .result-container {
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 1.1rem;
+            color: #2c3e50;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .alert {
+            background-color: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Morse Code Translator</h1>
+        <form method="POST" action="/">
+            <textarea id="inputText" name="input_text" rows="3" placeholder="Enter text or Morse code here...">{{ input_text }}</textarea>
+            <select name="translation_type">
+                <option value="text_to_morse">Text to Morse Code</option>
+                <option value="morse_to_text">Morse Code to Text</option>
+            </select>
+            <button type="submit">Translate</button>
+        </form>
+
+        {% if result %}
+        <div class="result-container" id="translatedResult">{{ result }}</div>
+        <button onclick="convertToVibration()">Vibrate Morse Code</button>
+        {% endif %}
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="alert">
+            {% for category, message in messages %}
+            {{ message }}
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <script>
+        const dotDuration = 200; // Duration for a dot (in milliseconds)
+        const dashDuration = 600; // Duration for a dash (in milliseconds)
+        const partPause = 200; // Pause between parts of the same letter
+        const letterPause = 600; // Pause between letters
+        const wordPause = 1400; // Pause between words
+
+        function convertToVibration() {
+            const morseCode = document.getElementById("translatedResult").innerText.trim();
+            let vibrationPattern = [];
+
+            for (let i = 0; i < morseCode.length; i++) {
+                const char = morseCode[i];
+
+                if (char === '.') {
+                    vibrationPattern.push(dotDuration);
+                } else if (char === '-') {
+                    vibrationPattern.push(dashDuration);
+                }
+
+                // Add pause between parts of the same letter
+                if (char === '.' || char === '-') {
+                    if (i < morseCode.length - 1 && (morseCode[i + 1] === '.' || morseCode[i + 1] === '-')) {
+                        vibrationPattern.push(partPause);
+                    }
+                } else if (char === ' ') {
+                    // Add longer pause between words if there is a double space
+                    if (i < morseCode.length - 1 && morseCode[i + 1] === ' ') {
+                        vibrationPattern.push(wordPause);
+                        i++; // Skip the next space
+                    } else {
+                        vibrationPattern.push(letterPause);
+                    }
+                }
+            }
+
+            // Trigger the vibration
+            if (navigator.vibrate) {
+                navigator.vibrate(vibrationPattern);
+            } else {
+                alert("Vibration API is not supported on this device.");
+            }
+        }
+    </script>
+</body>
+
+</html>
